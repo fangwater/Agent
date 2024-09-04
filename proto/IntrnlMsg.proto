@@ -1,0 +1,42 @@
+syntax = "proto2";
+package message.intrnl;
+message CommHeader {
+    optional int32 srcvId = 1;
+    optional string sndrCmptId = 2;
+    optional string sndrSubId = 3;
+    optional string tgtCmpntId = 4;
+    optional string tgtSubId = 5;
+    optional int32 msgSrcEnd = 6;
+    optional string msgSndngTm = 7;
+    optional string msgUuid = 8;
+    optional int32 dplcF = 9;
+    optional string sesnId = 10;
+    optional string tpcNm = 11;
+    optional int32 tstMdF = 12; 
+}
+
+message IntrnlMsgData
+{
+    optional int32 msgType = 1;
+    optional int32 msgLen = 2;
+    optional bytes data = 3;   
+};
+
+message IntrnlMsgExtData
+{
+    optional int32 dataCnt = 1;
+};
+
+// message IntrnlMsg {
+//     optional CommHeader header = 1;
+//     repeated IntrnlMsgData intrnMsgData = 2;
+//     optional IntrnlMsgExtData IntrnlMsgExtData = 3;
+// }; 
+
+message IntrnlMsg {
+    optional CommHeader header = 1;
+    required IntrnlMsgData intrnMsgData = 2;
+    optional IntrnlMsgExtData IntrnlMsgExtData = 3;
+}; 
+
+

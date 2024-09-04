@@ -1,0 +1,3 @@
+#ifndef MESSAGE_HANDLER_HPP
+#define MESSAGE_HANDLER_HPP
+#endif

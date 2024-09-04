@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <string>
 /**
  * @brief Agent的状态切换
