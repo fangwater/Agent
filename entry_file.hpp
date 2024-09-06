@@ -10,7 +10,7 @@
 
 class EntryFile {
 public:
-    EntryFile(const std::string &dir, const std::string &filename, size_t truncated_size, size_t entry_length);
+    EntryFile(const std::string &path, size_t truncated_size, size_t entry_length);
     EntryFile() = delete;
 
     size_t write(const char *buffer, int count = 1);

@@ -1,15 +1,15 @@
 #include "message_handler.hpp"
 #include "dsp_message.hpp"
-#include "fmt/core.h"
 #include "txn_recorder.hpp"
+#include <cmath>
 #include <fmt/format.h>
 #include <memory>
 #include <stdexcept>
 #include <sys/types.h>
 
 
-MessageHandler::MessageHandler(bool flag, std::string idx_path, std::string log_path, int id)
-    : state_(HandlerState::INIT), inner_flag_(flag), reset_requested_(false), running_(true), txn_recorder_(idx_path, log_path), id_(id){};
+MessageHandler::MessageHandler(bool flag, std::string dir, int id)
+    : state_(HandlerState::INIT), inner_flag_(flag), reset_requested_(false), running_(true), txn_recorder_(dir), id_(id){};
 
 bool MessageHandler::get_flag() {
     return flag_.load();
@@ -20,9 +20,9 @@ void MessageHandler::try_switch(bool target_flag) {
     {
         std::unique_lock<std::mutex> lock(mutex_);
         reset_requested_ = true;
-        fmt::println("agent[{}] reset flag, waiting......", id_);
+        logger_->info("agent[{}] reset flag, waiting......", id_);
         reset_cv_.wait(lock, [this] { return reset_requested_ == false; });
-        fmt::println("agent[{}] switch completed!", id_);
+        logger_->info("agent[{}] switch completed!", id_);
     }
 }
 
@@ -38,14 +38,14 @@ void MessageHandler::start_process() {
             std::unique_lock<std::mutex> lock(mutex_);
             if (cv_.wait_for(lock, std::chrono::seconds(10)) == std::cv_status::timeout) {
                 //因为超时退出，则切为alive
-                fmt::println("agent[{}] no message received in the last 10 seconds, switch to [ALIVE] state...", id_);
+                logger_->info("agent[{}] no message received in the last 10 seconds, switch to [ALIVE] state...", id_);
                 state_ = HandlerState::ALIVE;
                 if (reset_requested_) {
                     inner_flag_ = get_flag();
                     if (inner_flag_) {
-                        fmt::println("agent[{}] Set the process flag to true", id_);
+                        logger_->info("agent[{}] Set the process flag to true", id_);
                     } else {
-                        fmt::println("agent[{}] Set the process flag to false", id_);
+                        logger_->info("agent[{}] Set the process flag to false", id_);
                     }
                     reset_requested_ = false;
                     reset_cv_.notify_one();
@@ -67,16 +67,15 @@ void MessageHandler::start_process() {
                 auto dsp_msg = message_queue_.front();
                 message_queue_.pop();
                 if (!dsp_msg->initialize_) {
-                    fmt::println("agent[{}] try process a no initialized msg!", id_);
+                    logger_->info("agent[{}] try process a no initialized msg!", id_);
                     throw std::runtime_error("try process a no initialized msg!");
                 }
-                dsp_msg->process(txn_recorder_.processed_txn_id_);
+                dsp_msg->process(txn_recorder_.get_processed_txn_id());
                 if (inner_flag_) {
-                    dsp_msg->write(txn_recorder_.idx_, txn_recorder_.content_);
+                    txn_recorder_.write_dsp_message(dsp_msg);
                 }
                 dsp_msg->ack();
                 txn_recorder_.append_txn_entry(dsp_msg->txn_entry_);
-                txn_recorder_.processed_txn_id_++;
             }
             /**
                 * @brief 若发现此时，reset的标志被设置，则代表ME发生了备切主
@@ -84,7 +83,7 @@ void MessageHandler::start_process() {
                 * 收到dsp选主的IMT event后，把flag改为false，此时flag不能立刻生效，而是重置为INIT，flag再生效
                 */
             if (reset_requested_) {
-                fmt::println("agent[{}] reset requested, switching to [INIT] state...", id_);
+                logger_->info("agent[{}] reset requested, switching to [INIT] state...", id_);
                 //flag的变化不会立即生效，而是在状态切换之后
                 state_ = HandlerState::INIT;
                 reset_requested_ = false;
@@ -105,11 +104,11 @@ void MessageHandler::push_message(std::shared_ptr<DspMessage> dsp_msg) {
     cv_.notify_one();
 }
 
-int64_t MessageHandler::get_processed_txnid() {
-    fmt::println("Agent[{}] was asked txnid {}", id_, txn_recorder_.processed_txn_id_);
+int64_t MessageHandler::get_processed_txnid() const {
+    logger_->info("Agent[{}] was asked txnid {}", id_, txn_recorder_.get_processed_txn_id());
     return txn_recorder_.get_processed_txn_id();
 }
 
-int64_t MessageHandler::get_processed_total_data_count() {
+int64_t MessageHandler::get_processed_total_data_count() const {
     return txn_recorder_.get_processed_total_data_count();
 }

@@ -54,7 +54,7 @@ void DspMessage::write(std::shared_ptr<EntryFile> index_file, std::shared_ptr<En
     log_file->writev(buffers_, data_counts_);
 }
 
-void DspMessage::process(int64_t &processed_txn_id) {
+void DspMessage::process(int64_t processed_txn_id) {
     txn_entry_ = *reinterpret_cast<const TxnEntry *>(pbIntrnlReq_.intrnmsgdata().begin()->data().c_str());
     txn_entry_.msgCnt = 0;
     for (auto iter = pbIntrnlReq_.intrnmsgdata().begin(); iter != pbIntrnlReq_.intrnmsgdata().end(); iter++) {

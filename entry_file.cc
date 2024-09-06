@@ -51,13 +51,10 @@ void EntryFile::backup_file() {
     std::filesystem::copy_file(file_path_, backup_path, std::filesystem::copy_options::overwrite_existing);
 }
 
-EntryFile::EntryFile(const std::string &dir, const std::string &filename, size_t truncated_size, size_t entry_length)
+EntryFile::EntryFile(const std::string &path, size_t truncated_size, size_t entry_length)
     : entry_length_(entry_length), entry_count_(0) {
 
-    file_path_ = std::filesystem::path(dir) / filename;
-
-    std::filesystem::create_directories(dir);
-
+    file_path_ = std::filesystem::path(path);
     if (truncated_size > 0) {
         truncate_file(truncated_size);
     } else {
