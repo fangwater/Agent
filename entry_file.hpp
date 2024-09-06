@@ -13,8 +13,8 @@ public:
     EntryFile(const std::string &dir, const std::string &filename, size_t truncated_size, size_t entry_length);
     EntryFile() = delete;
 
-    size_t write(const char *buffer);
-    size_t writev(const std::vector<const char *> &buffers);
+    size_t write(const char *buffer, int count = 1);
+    size_t writev(const std::vector<char *> &buffers, const std::vector<int>& counts);
     void backup_file();
 
 private:

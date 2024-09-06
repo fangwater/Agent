@@ -81,8 +81,8 @@ PROTOBUF_CONSTEXPR IntrnlMsg::IntrnlMsg(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_._has_bits_)*/{}
   , /*decltype(_impl_._cached_size_)*/{}
+  , /*decltype(_impl_.intrnmsgdata_)*/{}
   , /*decltype(_impl_.header_)*/nullptr
-  , /*decltype(_impl_.intrnmsgdata_)*/nullptr
   , /*decltype(_impl_.intrnlmsgextdata_)*/nullptr} {}
 struct IntrnlMsgDefaultTypeInternal {
   PROTOBUF_CONSTEXPR IntrnlMsgDefaultTypeInternal()
@@ -160,8 +160,8 @@ const uint32_t TableStruct_IntrnlMsg_2eproto::offsets[] PROTOBUF_SECTION_VARIABL
   PROTOBUF_FIELD_OFFSET(::message::intrnl::IntrnlMsg, _impl_.intrnmsgdata_),
   PROTOBUF_FIELD_OFFSET(::message::intrnl::IntrnlMsg, _impl_.intrnlmsgextdata_),
   0,
+  ~0u,
   1,
-  2,
 };
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 18, -1, sizeof(::message::intrnl::CommHeader)},
@@ -188,7 +188,7 @@ const char descriptor_table_protodef_IntrnlMsg_2eproto[] PROTOBUF_SECTION_VARIAB
   "msgType\030\001 \001(\005\022\016\n\006msgLen\030\002 \001(\005\022\014\n\004data\030\003 "
   "\001(\014\"#\n\020IntrnlMsgExtData\022\017\n\007dataCnt\030\001 \001(\005"
   "\"\250\001\n\tIntrnlMsg\022*\n\006header\030\001 \001(\0132\032.message"
-  ".intrnl.CommHeader\0223\n\014intrnMsgData\030\002 \002(\013"
+  ".intrnl.CommHeader\0223\n\014intrnMsgData\030\002 \003(\013"
   "2\035.message.intrnl.IntrnlMsgData\022:\n\020Intrn"
   "lMsgExtData\030\003 \001(\0132 .message.intrnl.Intrn"
   "lMsgExtData"
@@ -1457,26 +1457,15 @@ class IntrnlMsg::_Internal {
   static void set_has_header(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
-  static const ::message::intrnl::IntrnlMsgData& intrnmsgdata(const IntrnlMsg* msg);
-  static void set_has_intrnmsgdata(HasBits* has_bits) {
-    (*has_bits)[0] |= 2u;
-  }
   static const ::message::intrnl::IntrnlMsgExtData& intrnlmsgextdata(const IntrnlMsg* msg);
   static void set_has_intrnlmsgextdata(HasBits* has_bits) {
-    (*has_bits)[0] |= 4u;
-  }
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000002) ^ 0x00000002) != 0;
+    (*has_bits)[0] |= 2u;
   }
 };
 
 const ::message::intrnl::CommHeader&
 IntrnlMsg::_Internal::header(const IntrnlMsg* msg) {
   return *msg->_impl_.header_;
-}
-const ::message::intrnl::IntrnlMsgData&
-IntrnlMsg::_Internal::intrnmsgdata(const IntrnlMsg* msg) {
-  return *msg->_impl_.intrnmsgdata_;
 }
 const ::message::intrnl::IntrnlMsgExtData&
 IntrnlMsg::_Internal::intrnlmsgextdata(const IntrnlMsg* msg) {
@@ -1494,16 +1483,13 @@ IntrnlMsg::IntrnlMsg(const IntrnlMsg& from)
   new (&_impl_) Impl_{
       decltype(_impl_._has_bits_){from._impl_._has_bits_}
     , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.intrnmsgdata_){from._impl_.intrnmsgdata_}
     , decltype(_impl_.header_){nullptr}
-    , decltype(_impl_.intrnmsgdata_){nullptr}
     , decltype(_impl_.intrnlmsgextdata_){nullptr}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   if (from._internal_has_header()) {
     _this->_impl_.header_ = new ::message::intrnl::CommHeader(*from._impl_.header_);
-  }
-  if (from._internal_has_intrnmsgdata()) {
-    _this->_impl_.intrnmsgdata_ = new ::message::intrnl::IntrnlMsgData(*from._impl_.intrnmsgdata_);
   }
   if (from._internal_has_intrnlmsgextdata()) {
     _this->_impl_.intrnlmsgextdata_ = new ::message::intrnl::IntrnlMsgExtData(*from._impl_.intrnlmsgextdata_);
@@ -1518,8 +1504,8 @@ inline void IntrnlMsg::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_._has_bits_){}
     , /*decltype(_impl_._cached_size_)*/{}
+    , decltype(_impl_.intrnmsgdata_){arena}
     , decltype(_impl_.header_){nullptr}
-    , decltype(_impl_.intrnmsgdata_){nullptr}
     , decltype(_impl_.intrnlmsgextdata_){nullptr}
   };
 }
@@ -1535,8 +1521,8 @@ IntrnlMsg::~IntrnlMsg() {
 
 inline void IntrnlMsg::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.intrnmsgdata_.~RepeatedPtrField();
   if (this != internal_default_instance()) delete _impl_.header_;
-  if (this != internal_default_instance()) delete _impl_.intrnmsgdata_;
   if (this != internal_default_instance()) delete _impl_.intrnlmsgextdata_;
 }
 
@@ -1550,17 +1536,14 @@ void IntrnlMsg::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.intrnmsgdata_.Clear();
   cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
+  if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
       GOOGLE_DCHECK(_impl_.header_ != nullptr);
       _impl_.header_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(_impl_.intrnmsgdata_ != nullptr);
-      _impl_.intrnmsgdata_->Clear();
-    }
-    if (cached_has_bits & 0x00000004u) {
       GOOGLE_DCHECK(_impl_.intrnlmsgextdata_ != nullptr);
       _impl_.intrnlmsgextdata_->Clear();
     }
@@ -1584,11 +1567,16 @@ const char* IntrnlMsg::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx
         } else
           goto handle_unusual;
         continue;
-      // required .message.intrnl.IntrnlMsgData intrnMsgData = 2;
+      // repeated .message.intrnl.IntrnlMsgData intrnMsgData = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
-          ptr = ctx->ParseMessage(_internal_mutable_intrnmsgdata(), ptr);
-          CHK_(ptr);
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_intrnmsgdata(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -1638,15 +1626,16 @@ uint8_t* IntrnlMsg::_InternalSerialize(
         _Internal::header(this).GetCachedSize(), target, stream);
   }
 
-  // required .message.intrnl.IntrnlMsgData intrnMsgData = 2;
-  if (cached_has_bits & 0x00000002u) {
+  // repeated .message.intrnl.IntrnlMsgData intrnMsgData = 2;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_intrnmsgdata_size()); i < n; i++) {
+    const auto& repfield = this->_internal_intrnmsgdata(i);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(2, _Internal::intrnmsgdata(this),
-        _Internal::intrnmsgdata(this).GetCachedSize(), target, stream);
+        InternalWriteMessage(2, repfield, repfield.GetCachedSize(), target, stream);
   }
 
   // optional .message.intrnl.IntrnlMsgExtData IntrnlMsgExtData = 3;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000002u) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(3, _Internal::intrnlmsgextdata(this),
         _Internal::intrnlmsgextdata(this).GetCachedSize(), target, stream);
@@ -1664,31 +1653,34 @@ size_t IntrnlMsg::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:message.intrnl.IntrnlMsg)
   size_t total_size = 0;
 
-  // required .message.intrnl.IntrnlMsgData intrnMsgData = 2;
-  if (_internal_has_intrnmsgdata()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.intrnmsgdata_);
-  }
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // optional .message.intrnl.CommHeader header = 1;
+  // repeated .message.intrnl.IntrnlMsgData intrnMsgData = 2;
+  total_size += 1UL * this->_internal_intrnmsgdata_size();
+  for (const auto& msg : this->_impl_.intrnmsgdata_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
   cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000001u) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.header_);
-  }
+  if (cached_has_bits & 0x00000003u) {
+    // optional .message.intrnl.CommHeader header = 1;
+    if (cached_has_bits & 0x00000001u) {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *_impl_.header_);
+    }
 
-  // optional .message.intrnl.IntrnlMsgExtData IntrnlMsgExtData = 3;
-  if (cached_has_bits & 0x00000004u) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.intrnlmsgextdata_);
-  }
+    // optional .message.intrnl.IntrnlMsgExtData IntrnlMsgExtData = 3;
+    if (cached_has_bits & 0x00000002u) {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *_impl_.intrnlmsgextdata_);
+    }
 
+  }
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -1707,17 +1699,14 @@ void IntrnlMsg::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROT
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  _this->_impl_.intrnmsgdata_.MergeFrom(from._impl_.intrnmsgdata_);
   cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000007u) {
+  if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
       _this->_internal_mutable_header()->::message::intrnl::CommHeader::MergeFrom(
           from._internal_header());
     }
     if (cached_has_bits & 0x00000002u) {
-      _this->_internal_mutable_intrnmsgdata()->::message::intrnl::IntrnlMsgData::MergeFrom(
-          from._internal_intrnmsgdata());
-    }
-    if (cached_has_bits & 0x00000004u) {
       _this->_internal_mutable_intrnlmsgextdata()->::message::intrnl::IntrnlMsgExtData::MergeFrom(
           from._internal_intrnlmsgextdata());
     }
@@ -1733,7 +1722,6 @@ void IntrnlMsg::CopyFrom(const IntrnlMsg& from) {
 }
 
 bool IntrnlMsg::IsInitialized() const {
-  if (_Internal::MissingRequiredFields(_impl_._has_bits_)) return false;
   return true;
 }
 
@@ -1741,6 +1729,7 @@ void IntrnlMsg::InternalSwap(IntrnlMsg* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.intrnmsgdata_.InternalSwap(&other->_impl_.intrnmsgdata_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(IntrnlMsg, _impl_.intrnlmsgextdata_)
       + sizeof(IntrnlMsg::_impl_.intrnlmsgextdata_)

@@ -27,15 +27,9 @@ message IntrnlMsgExtData
     optional int32 dataCnt = 1;
 };
 
-// message IntrnlMsg {
-//     optional CommHeader header = 1;
-//     repeated IntrnlMsgData intrnMsgData = 2;
-//     optional IntrnlMsgExtData IntrnlMsgExtData = 3;
-// }; 
-
 message IntrnlMsg {
     optional CommHeader header = 1;
-    required IntrnlMsgData intrnMsgData = 2;
+    repeated IntrnlMsgData intrnMsgData = 2;
     optional IntrnlMsgExtData IntrnlMsgExtData = 3;
 }; 
 

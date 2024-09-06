@@ -1,30 +1,32 @@
 
 #include "entry_file.hpp"
 #include <fstream>
+#include <numeric>
 #include <stdexcept>
-size_t EntryFile::write(const char *buffer) {
+#include <vector>
+size_t EntryFile::write(const char *buffer, int count) {
     int fd = open(file_path_.c_str(), O_APPEND | O_WRONLY);
     if (fd == -1) {
         throw std::runtime_error("Failed to open file for writing.");
     }
 
-    ssize_t written = ::write(fd, buffer, entry_length_);
+    ssize_t written = ::write(fd, buffer, entry_length_*count);
     if (written == -1) {
         close(fd);
         throw std::runtime_error("Failed to write to file.");
     }
 
     close(fd);
-    entry_count_++;
+    entry_count_ += count;
     return written;
 }
 
-size_t EntryFile::writev(const std::vector<const char *> &buffers) {
+size_t EntryFile::writev(const std::vector<char *> &buffers, const std::vector<int>& counts) {
     std::vector<struct iovec> iov(buffers.size());
 
     for (size_t i = 0; i < buffers.size(); ++i) {
         iov[i].iov_base = (void *) buffers[i];
-        iov[i].iov_len = entry_length_;
+        iov[i].iov_len = entry_length_ * counts[i];
     }
 
     int fd = open(file_path_.c_str(), O_APPEND | O_WRONLY);
@@ -39,7 +41,7 @@ size_t EntryFile::writev(const std::vector<const char *> &buffers) {
     }
 
     close(fd);
-    entry_count_ += buffers.size();
+    entry_count_ += std::accumulate(counts.begin(),counts.end(),0);
     return written;
 }
 

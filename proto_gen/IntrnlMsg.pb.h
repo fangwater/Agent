@@ -919,10 +919,28 @@ class IntrnlMsg final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kHeaderFieldNumber = 1,
     kIntrnMsgDataFieldNumber = 2,
+    kHeaderFieldNumber = 1,
     kIntrnlMsgExtDataFieldNumber = 3,
   };
+  // repeated .message.intrnl.IntrnlMsgData intrnMsgData = 2;
+  int intrnmsgdata_size() const;
+  private:
+  int _internal_intrnmsgdata_size() const;
+  public:
+  void clear_intrnmsgdata();
+  ::message::intrnl::IntrnlMsgData* mutable_intrnmsgdata(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::message::intrnl::IntrnlMsgData >*
+      mutable_intrnmsgdata();
+  private:
+  const ::message::intrnl::IntrnlMsgData& _internal_intrnmsgdata(int index) const;
+  ::message::intrnl::IntrnlMsgData* _internal_add_intrnmsgdata();
+  public:
+  const ::message::intrnl::IntrnlMsgData& intrnmsgdata(int index) const;
+  ::message::intrnl::IntrnlMsgData* add_intrnmsgdata();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::message::intrnl::IntrnlMsgData >&
+      intrnmsgdata() const;
+
   // optional .message.intrnl.CommHeader header = 1;
   bool has_header() const;
   private:
@@ -940,24 +958,6 @@ class IntrnlMsg final :
   void unsafe_arena_set_allocated_header(
       ::message::intrnl::CommHeader* header);
   ::message::intrnl::CommHeader* unsafe_arena_release_header();
-
-  // required .message.intrnl.IntrnlMsgData intrnMsgData = 2;
-  bool has_intrnmsgdata() const;
-  private:
-  bool _internal_has_intrnmsgdata() const;
-  public:
-  void clear_intrnmsgdata();
-  const ::message::intrnl::IntrnlMsgData& intrnmsgdata() const;
-  PROTOBUF_NODISCARD ::message::intrnl::IntrnlMsgData* release_intrnmsgdata();
-  ::message::intrnl::IntrnlMsgData* mutable_intrnmsgdata();
-  void set_allocated_intrnmsgdata(::message::intrnl::IntrnlMsgData* intrnmsgdata);
-  private:
-  const ::message::intrnl::IntrnlMsgData& _internal_intrnmsgdata() const;
-  ::message::intrnl::IntrnlMsgData* _internal_mutable_intrnmsgdata();
-  public:
-  void unsafe_arena_set_allocated_intrnmsgdata(
-      ::message::intrnl::IntrnlMsgData* intrnmsgdata);
-  ::message::intrnl::IntrnlMsgData* unsafe_arena_release_intrnmsgdata();
 
   // optional .message.intrnl.IntrnlMsgExtData IntrnlMsgExtData = 3;
   bool has_intrnlmsgextdata() const;
@@ -987,8 +987,8 @@ class IntrnlMsg final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::message::intrnl::IntrnlMsgData > intrnmsgdata_;
     ::message::intrnl::CommHeader* header_;
-    ::message::intrnl::IntrnlMsgData* intrnmsgdata_;
     ::message::intrnl::IntrnlMsgExtData* intrnlmsgextdata_;
   };
   union { Impl_ _impl_; };
@@ -1915,99 +1915,49 @@ inline void IntrnlMsg::set_allocated_header(::message::intrnl::CommHeader* heade
   // @@protoc_insertion_point(field_set_allocated:message.intrnl.IntrnlMsg.header)
 }
 
-// required .message.intrnl.IntrnlMsgData intrnMsgData = 2;
-inline bool IntrnlMsg::_internal_has_intrnmsgdata() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.intrnmsgdata_ != nullptr);
-  return value;
+// repeated .message.intrnl.IntrnlMsgData intrnMsgData = 2;
+inline int IntrnlMsg::_internal_intrnmsgdata_size() const {
+  return _impl_.intrnmsgdata_.size();
 }
-inline bool IntrnlMsg::has_intrnmsgdata() const {
-  return _internal_has_intrnmsgdata();
+inline int IntrnlMsg::intrnmsgdata_size() const {
+  return _internal_intrnmsgdata_size();
 }
 inline void IntrnlMsg::clear_intrnmsgdata() {
-  if (_impl_.intrnmsgdata_ != nullptr) _impl_.intrnmsgdata_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000002u;
+  _impl_.intrnmsgdata_.Clear();
 }
-inline const ::message::intrnl::IntrnlMsgData& IntrnlMsg::_internal_intrnmsgdata() const {
-  const ::message::intrnl::IntrnlMsgData* p = _impl_.intrnmsgdata_;
-  return p != nullptr ? *p : reinterpret_cast<const ::message::intrnl::IntrnlMsgData&>(
-      ::message::intrnl::_IntrnlMsgData_default_instance_);
-}
-inline const ::message::intrnl::IntrnlMsgData& IntrnlMsg::intrnmsgdata() const {
-  // @@protoc_insertion_point(field_get:message.intrnl.IntrnlMsg.intrnMsgData)
-  return _internal_intrnmsgdata();
-}
-inline void IntrnlMsg::unsafe_arena_set_allocated_intrnmsgdata(
-    ::message::intrnl::IntrnlMsgData* intrnmsgdata) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.intrnmsgdata_);
-  }
-  _impl_.intrnmsgdata_ = intrnmsgdata;
-  if (intrnmsgdata) {
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:message.intrnl.IntrnlMsg.intrnMsgData)
-}
-inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::release_intrnmsgdata() {
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::message::intrnl::IntrnlMsgData* temp = _impl_.intrnmsgdata_;
-  _impl_.intrnmsgdata_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
-}
-inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::unsafe_arena_release_intrnmsgdata() {
-  // @@protoc_insertion_point(field_release:message.intrnl.IntrnlMsg.intrnMsgData)
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::message::intrnl::IntrnlMsgData* temp = _impl_.intrnmsgdata_;
-  _impl_.intrnmsgdata_ = nullptr;
-  return temp;
-}
-inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::_internal_mutable_intrnmsgdata() {
-  _impl_._has_bits_[0] |= 0x00000002u;
-  if (_impl_.intrnmsgdata_ == nullptr) {
-    auto* p = CreateMaybeMessage<::message::intrnl::IntrnlMsgData>(GetArenaForAllocation());
-    _impl_.intrnmsgdata_ = p;
-  }
-  return _impl_.intrnmsgdata_;
-}
-inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::mutable_intrnmsgdata() {
-  ::message::intrnl::IntrnlMsgData* _msg = _internal_mutable_intrnmsgdata();
+inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::mutable_intrnmsgdata(int index) {
   // @@protoc_insertion_point(field_mutable:message.intrnl.IntrnlMsg.intrnMsgData)
-  return _msg;
+  return _impl_.intrnmsgdata_.Mutable(index);
 }
-inline void IntrnlMsg::set_allocated_intrnmsgdata(::message::intrnl::IntrnlMsgData* intrnmsgdata) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete _impl_.intrnmsgdata_;
-  }
-  if (intrnmsgdata) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(intrnmsgdata);
-    if (message_arena != submessage_arena) {
-      intrnmsgdata = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, intrnmsgdata, submessage_arena);
-    }
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-  _impl_.intrnmsgdata_ = intrnmsgdata;
-  // @@protoc_insertion_point(field_set_allocated:message.intrnl.IntrnlMsg.intrnMsgData)
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::message::intrnl::IntrnlMsgData >*
+IntrnlMsg::mutable_intrnmsgdata() {
+  // @@protoc_insertion_point(field_mutable_list:message.intrnl.IntrnlMsg.intrnMsgData)
+  return &_impl_.intrnmsgdata_;
+}
+inline const ::message::intrnl::IntrnlMsgData& IntrnlMsg::_internal_intrnmsgdata(int index) const {
+  return _impl_.intrnmsgdata_.Get(index);
+}
+inline const ::message::intrnl::IntrnlMsgData& IntrnlMsg::intrnmsgdata(int index) const {
+  // @@protoc_insertion_point(field_get:message.intrnl.IntrnlMsg.intrnMsgData)
+  return _internal_intrnmsgdata(index);
+}
+inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::_internal_add_intrnmsgdata() {
+  return _impl_.intrnmsgdata_.Add();
+}
+inline ::message::intrnl::IntrnlMsgData* IntrnlMsg::add_intrnmsgdata() {
+  ::message::intrnl::IntrnlMsgData* _add = _internal_add_intrnmsgdata();
+  // @@protoc_insertion_point(field_add:message.intrnl.IntrnlMsg.intrnMsgData)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::message::intrnl::IntrnlMsgData >&
+IntrnlMsg::intrnmsgdata() const {
+  // @@protoc_insertion_point(field_list:message.intrnl.IntrnlMsg.intrnMsgData)
+  return _impl_.intrnmsgdata_;
 }
 
 // optional .message.intrnl.IntrnlMsgExtData IntrnlMsgExtData = 3;
 inline bool IntrnlMsg::_internal_has_intrnlmsgextdata() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
+  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
   PROTOBUF_ASSUME(!value || _impl_.intrnlmsgextdata_ != nullptr);
   return value;
 }
@@ -2016,7 +1966,7 @@ inline bool IntrnlMsg::has_intrnlmsgextdata() const {
 }
 inline void IntrnlMsg::clear_intrnlmsgextdata() {
   if (_impl_.intrnlmsgextdata_ != nullptr) _impl_.intrnlmsgextdata_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000004u;
+  _impl_._has_bits_[0] &= ~0x00000002u;
 }
 inline const ::message::intrnl::IntrnlMsgExtData& IntrnlMsg::_internal_intrnlmsgextdata() const {
   const ::message::intrnl::IntrnlMsgExtData* p = _impl_.intrnlmsgextdata_;
@@ -2034,14 +1984,14 @@ inline void IntrnlMsg::unsafe_arena_set_allocated_intrnlmsgextdata(
   }
   _impl_.intrnlmsgextdata_ = intrnlmsgextdata;
   if (intrnlmsgextdata) {
-    _impl_._has_bits_[0] |= 0x00000004u;
+    _impl_._has_bits_[0] |= 0x00000002u;
   } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
+    _impl_._has_bits_[0] &= ~0x00000002u;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:message.intrnl.IntrnlMsg.IntrnlMsgExtData)
 }
 inline ::message::intrnl::IntrnlMsgExtData* IntrnlMsg::release_intrnlmsgextdata() {
-  _impl_._has_bits_[0] &= ~0x00000004u;
+  _impl_._has_bits_[0] &= ~0x00000002u;
   ::message::intrnl::IntrnlMsgExtData* temp = _impl_.intrnlmsgextdata_;
   _impl_.intrnlmsgextdata_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
@@ -2057,13 +2007,13 @@ inline ::message::intrnl::IntrnlMsgExtData* IntrnlMsg::release_intrnlmsgextdata(
 }
 inline ::message::intrnl::IntrnlMsgExtData* IntrnlMsg::unsafe_arena_release_intrnlmsgextdata() {
   // @@protoc_insertion_point(field_release:message.intrnl.IntrnlMsg.IntrnlMsgExtData)
-  _impl_._has_bits_[0] &= ~0x00000004u;
+  _impl_._has_bits_[0] &= ~0x00000002u;
   ::message::intrnl::IntrnlMsgExtData* temp = _impl_.intrnlmsgextdata_;
   _impl_.intrnlmsgextdata_ = nullptr;
   return temp;
 }
 inline ::message::intrnl::IntrnlMsgExtData* IntrnlMsg::_internal_mutable_intrnlmsgextdata() {
-  _impl_._has_bits_[0] |= 0x00000004u;
+  _impl_._has_bits_[0] |= 0x00000002u;
   if (_impl_.intrnlmsgextdata_ == nullptr) {
     auto* p = CreateMaybeMessage<::message::intrnl::IntrnlMsgExtData>(GetArenaForAllocation());
     _impl_.intrnlmsgextdata_ = p;
@@ -2087,9 +2037,9 @@ inline void IntrnlMsg::set_allocated_intrnlmsgextdata(::message::intrnl::IntrnlM
       intrnlmsgextdata = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, intrnlmsgextdata, submessage_arena);
     }
-    _impl_._has_bits_[0] |= 0x00000004u;
+    _impl_._has_bits_[0] |= 0x00000002u;
   } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
+    _impl_._has_bits_[0] &= ~0x00000002u;
   }
   _impl_.intrnlmsgextdata_ = intrnlmsgextdata;
   // @@protoc_insertion_point(field_set_allocated:message.intrnl.IntrnlMsg.IntrnlMsgExtData)
