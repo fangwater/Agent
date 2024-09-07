@@ -1,9 +1,30 @@
 #include "test_case.hpp"
+#include "agent.hpp"
+#include "dsp_message.hpp"
+#include "match_engine.hpp"
+#include "spdlog/spdlog.h"
+#include "txn_entry.hpp"
+#include <chrono>
+#include <cstddef>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
 
 std::shared_ptr<Agent> build_agent(int i) {
-    std::string config_path = fmt::format("../config.cfg");
     std::string agent_path = fmt::format("../agent{}", i);
-    return std::make_shared<Agent>(fmt::format("host{}", i), config_path, agent_path, i);
+    return std::make_shared<Agent>(fmt::format("host{}", i), agent_path, i);
+}
+
+void print_file_status(const std::vector<std::shared_ptr<Agent>>& agents) {
+    spdlog::info("===================");
+    for (int i = 0; i < agents.size(); i++) {
+        size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
+        size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_content.bin", i));
+        spdlog::info("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size/sizeof(TxnEntry), log_size/DspMessage::buffer_size);
+    }
+    spdlog::info("===================");
 }
 
 std::vector<std::shared_ptr<Agent>> build_agents(int num, std::shared_ptr<DspChannel> channel) {
@@ -40,13 +61,7 @@ void test_base() {
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        fmt::println("===================");
-        for (int i = 0; i < agents.size(); i++) {
-            size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
-            size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_log_content.bin", i));
-            fmt::println("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
-        }
-        fmt::println("===================");
+        print_file_status(agents);
     }
     //模拟出现主备切换的情况，且当dsp中存在消息堵塞
     //1 关闭ME 让ME不再产生消息
@@ -65,13 +80,13 @@ void test_base() {
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        fmt::println("===================");
+        spdlog::info("===================");
         for (int i = 0; i < agents.size(); i++) {
             size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
             size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_log_content.bin", i));
-            fmt::println("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
+            spdlog::info("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
         }
-        fmt::println("===================");
+        spdlog::info("===================");
     }
     for (auto &t: run_agents) {
         t.join();
@@ -110,13 +125,6 @@ void test_secondary_agent_restart() {
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        fmt::println("===================");
-        for (int i = 0; i < agents.size(); i++) {
-            size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
-            size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_log_content.bin", i));
-            fmt::println("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
-        }
-        fmt::println("===================");
     }
     // match_eng->stop();
     run_me.join();
@@ -159,13 +167,7 @@ void test_primary_agent_restart() {
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        fmt::println("===================");
-        for (int i = 0; i < agents.size(); i++) {
-            size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
-            size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_log_content.bin", i));
-            fmt::println("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
-        }
-        fmt::println("===================");
+        print_file_status(agents);
     }
     // match_eng->stop();
     run_me.join();

@@ -27,7 +27,7 @@ public:
 
 public:
     DspMessage() : initialize_(false){};
-    void init_msg(char *pBuffer, int length, std::shared_ptr<ImtMessageOperator> pMessageOptr);
+    void init_msg(const char *pBuffer, int length, std::shared_ptr<ImtMessageOperator> pMessageOptr);
     void ack();
     void process(int64_t processed_txn_id);
     void write(std::shared_ptr<EntryFile> index_file, std::shared_ptr<EntryFile> log_file);

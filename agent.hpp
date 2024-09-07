@@ -8,6 +8,7 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include "utils.hpp"
 /**
  * @brief Agent的状态切换
  * 业务中涉及的状态切换包括:
@@ -33,33 +34,14 @@ public:
     };
 
 private:
-    static std::string state_str(AgentState s) {
-        switch (s) {
-            case AgentState::INIT:
-                return "INIT";
-            case AgentState::PRIMARY:
-                return "PRIMARY";
-            case AgentState::TO_PRIMARY:
-                return "TO_PRIMARY";
-            case AgentState::TO_SECONDARY:
-                return "TO_SECONDARY";
-            case AgentState::SECONDARY:
-                return "SECONDARY";
-            default:
-                break;
-        }
-        return "NULL";
-    }
-
+    static std::string state_str(AgentState s);
 public:
     Agent() = delete;
-    Agent(std::string host_name, std::string config_path, std::string dir, int agent_id);
+    Agent(std::string host_name, std::string dir, int agent_id);
     bool is_txn_ready();
     void handle_subscribe_event(const std::string &master);
     void push(const std::vector<char> &message);
-    int get_id() const {
-        return agent_id_;
-    }
+    int get_id() const;
     //moz-kv instance
     std::unique_ptr<MessageHandler> message_handler_;
 
@@ -78,6 +60,8 @@ private:
     std::mutex mu_;
     int agent_id_;
     std::string host_name_;
+    Logger logger_;
+    
 };
 
 #endif

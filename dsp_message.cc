@@ -77,7 +77,7 @@ void DspMessage::process(int64_t processed_txn_id) {
  * @param length 
  * @param pMessageOptr 
  */
-void DspMessage::init_msg(char *pBuffer, int length, std::shared_ptr<ImtMessageOperator> pMessageOptr) {
+void DspMessage::init_msg(const char *pBuffer, int length, std::shared_ptr<ImtMessageOperator> pMessageOptr) {
     //判断pbuffer是否为空，length是否大于0，pMessageOptr是否非空，否则throw error
     if (!pBuffer) {
         throw std::invalid_argument("Buffer pointer is null");

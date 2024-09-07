@@ -17,7 +17,7 @@ enum class HandlerState {
 
 class MessageHandler {
 public:
-    MessageHandler(bool flag, std::string dir, int id);
+    MessageHandler(Logger logger, bool flag, std::string dir, int id);
     bool get_flag();
     void try_switch(bool target_flag);
     void start_process();
@@ -26,7 +26,8 @@ public:
     int64_t get_processed_txnid() const ;
     int64_t get_processed_total_data_count() const;
 
-public : Logger logger_;
+public:
+    Logger logger_;
     TxnRecorder txn_recorder_;
     std::atomic_bool reset_requested_;
     std::mutex mutex_;
