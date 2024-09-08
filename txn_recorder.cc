@@ -1,5 +1,6 @@
 #include "txn_recorder.hpp"
 #include "dsp_message.hpp"
+#include "utils.hpp"
 #include <cstddef>
 #include <fcntl.h>
 #include <filesystem>
@@ -30,27 +31,34 @@ int64_t TxnRecorder::get_processed_total_data_count() const {
  * @param idx_path 索引文件路径
  * @param log_path 日志文件路径
  */
-TxnRecorder::TxnRecorder(std::string dir):processed_txn_id_(0) {
+TxnRecorder::TxnRecorder(std::string dir,Logger logger):processed_txn_id_(0),logger_(logger) {
     idx_path_ = fmt::format("{}/{}", dir, index_name);
     content_path_ = fmt::format("{}/{}", dir, log_name);
     //判断文件夹是否存在，不存在则创建dir
     if (!std::filesystem::exists(dir)) {
         std::filesystem::create_directories(dir);
     }
-    //如果索引文件不存在，或存在但是大小为0，重新创建
-    if (std::filesystem::exists(index_name) && std::filesystem::is_regular_file(index_name)) {
-        if (!std::filesystem::file_size(index_name)) {
+    //如果索引文件存在，但是大小为0，则删除无意义的索引文件，视为不存在
+    if (std::filesystem::exists(idx_path_) && std::filesystem::is_regular_file(idx_path_)) {
+        if (!std::filesystem::file_size(idx_path_)) {
             spdlog::info("index file is empty, remove it.");
-            std::filesystem::remove(index_name);
-            std::filesystem::remove(log_name);
-            //代表首次启动，截断长度为0
-            idx_ = std::shared_ptr<EntryFile>(new EntryFile(index_name, 0, sizeof(TxnEntry)));
-            content_ = std::shared_ptr<EntryFile>(new EntryFile(log_name, 0, DspMessage::buffer_size));
-        } else {
-            //数据存在且不为0，需要读取数据
-            init_index_file();
-            verify_log_file();
+            std::filesystem::remove(idx_path_);
+            std::filesystem::remove(content_path_);
         }
+    }
+    /**
+     * @brief 启动时，查看文件状态
+     * 1、若索引文件为0，删除，此时被视为不存在的状态
+     * 2、因此索引文件只分为存在(至少包含一条数据)和不存在两种情况
+     */
+    if (std::filesystem::exists(idx_path_) && std::filesystem::is_regular_file(idx_path_)) {
+        //代表首次启动，截断长度为0
+        idx_ = std::shared_ptr<EntryFile>(new EntryFile(idx_path_, 0, sizeof(TxnEntry)));
+        content_ = std::shared_ptr<EntryFile>(new EntryFile(content_path_, 0, DspMessage::buffer_size));
+    } else {
+        //数据存在且不为0，需要读取数据
+        init_index_file();
+        verify_log_file();
     }
 }
 

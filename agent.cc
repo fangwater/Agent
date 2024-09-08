@@ -23,8 +23,12 @@ std::string Agent::state_str(AgentState s) {
     }
     return "NULL";
 }
+
+std::string Agent::current_state() {
+    return state_str(agent_state_);
+}
 Agent::Agent(std::string host_name, std::string dir, int agent_id)
-    : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT){
+    : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT) {
     logger_ = create_logger(fmt::format("agent[{}]", agent_id_));
     //Agent默认ME为备，flag = true标志位需要写的状态
     message_handler_ = std::make_unique<MessageHandler>(logger_,true, dir, agent_id);
@@ -69,10 +73,10 @@ void Agent::handle_subscribe_event(const std::string &master) {
             //初始为INIT状态，切换为PRIMARRY
             agent_state_ = AgentState::TO_PRIMARY;
             logger_->info("agent state change due to init subscribe:");
-            logger_->info("current state: []...", state_str(agent_state_));
+            logger_->info("current state: [{}]...", state_str(agent_state_));
             message_handler_->try_switch(false);
             agent_state_ = AgentState::PRIMARY;
-            logger_->info("success switch to []!", state_str(agent_state_));
+            logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else if(agent_state_ == AgentState::PRIMARY){
             /**
              * @brief 已经为主，然后收到订阅事件，且切换目标为主
@@ -87,10 +91,10 @@ void Agent::handle_subscribe_event(const std::string &master) {
              * ME先前为备，因此agent为secondary，然后被选为主，此时agent跟随切主
              */
             logger_->info("agent state change due to master match_engine re-select!");
-            logger_->info("current state: []...", state_str(agent_state_));
+            logger_->info("current state: [{}]...", state_str(agent_state_));
             message_handler_->try_switch(false);
             agent_state_ = AgentState::PRIMARY;
-            logger_->info("success switch to []!", state_str(agent_state_));
+            logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else {
             logger_->error("error for agent in {} and try switch {}",state_str(agent_state_),state_str(AgentState::PRIMARY));
             throw std::runtime_error("error state");
@@ -100,9 +104,9 @@ void Agent::handle_subscribe_event(const std::string &master) {
         if (agent_state_ == AgentState::INIT) {
             //初始为INIT状态 message_handler默认写，无需切换
             logger_->info("agent state change due to init subscribe:");
-            logger_->info("current state: []...", state_str(agent_state_));
+            logger_->info("current state: [{}]...", state_str(agent_state_));
             agent_state_ = AgentState::SECONDARY;
-            logger_->info("success switch to []!", state_str(agent_state_));
+            logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else if(agent_state_ == AgentState::SECONDARY){
             //Agent重启，但保持secondary的位置
             logger_->info("primary agent restart, keep state...");
@@ -112,11 +116,11 @@ void Agent::handle_subscribe_event(const std::string &master) {
              * (或者弃用？禁止重启)
              */
             logger_->info("agent state change due to master match_engine re-select!");
-            logger_->info("current state: []...", state_str(agent_state_));
+            logger_->info("current state: [{}]...", state_str(agent_state_));
             agent_state_ = AgentState::TO_SECONDARY;
             message_handler_->try_switch(true);
             agent_state_ = AgentState::SECONDARY;
-            logger_->info("success switch to []!", state_str(agent_state_));
+            logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else {
             logger_->error("error for agent in {} and try switch {}", state_str(agent_state_), state_str(AgentState::SECONDARY));
             throw std::runtime_error("error state");

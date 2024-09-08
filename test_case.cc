@@ -27,6 +27,15 @@ void print_file_status(const std::vector<std::shared_ptr<Agent>>& agents) {
     spdlog::info("===================");
 }
 
+void print_agent_status(const std::vector<std::shared_ptr<Agent>> &agents) {
+    spdlog::info("===================");
+    for (int i = 0; i < agents.size(); i++) {
+        spdlog::info("Agent[{}]|{:16}|", agents[i]->get_id(), agents[i]->current_state());
+    }
+    spdlog::info("===================");
+}
+
+
 std::vector<std::shared_ptr<Agent>> build_agents(int num, std::shared_ptr<DspChannel> channel) {
     std::vector<std::shared_ptr<Agent>> agents;
     for (int i = 0; i < num; i++) {
@@ -57,6 +66,7 @@ void test_base() {
         match_eng->run(channel);
     });
     //假设ME0为主，ME123为备份
+    print_agent_status(agents);
     channel->reset_master("host0");
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {

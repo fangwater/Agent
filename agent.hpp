@@ -41,6 +41,7 @@ public:
     bool is_txn_ready();
     void handle_subscribe_event(const std::string &master);
     void push(const std::vector<char> &message);
+    std::string current_state();
     int get_id() const;
     //moz-kv instance
     std::unique_ptr<MessageHandler> message_handler_;

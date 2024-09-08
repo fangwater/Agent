@@ -8,11 +8,12 @@
 #include <string>
 #include <vector>
 #include "txn_entry.hpp"
+#include "utils.hpp"
 #include <spdlog/spdlog.h>
 
 class TxnRecorder {
 public:
-    TxnRecorder(std::string dir);
+    TxnRecorder(std::string dir, Logger logger);
     void append_txn_entry(const TxnEntry& entry);
     int64_t get_processed_txn_id() const;
     int64_t get_processed_total_data_count() const;
@@ -31,6 +32,7 @@ private:
     const char *log_name = "txn_content";
     std::string idx_path_;
     std::string content_path_;
+    Logger logger_;
 };
 
 
