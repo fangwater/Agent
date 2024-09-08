@@ -37,11 +37,12 @@ TxnRecorder::TxnRecorder(std::string dir,Logger logger):processed_txn_id_(0),log
     //判断文件夹是否存在，不存在则创建dir
     if (!std::filesystem::exists(dir)) {
         std::filesystem::create_directories(dir);
+        logger_->info("create txn log dir:{}",dir.c_str());
     }
     //如果索引文件存在，但是大小为0，则删除无意义的索引文件，视为不存在
     if (std::filesystem::exists(idx_path_) && std::filesystem::is_regular_file(idx_path_)) {
         if (!std::filesystem::file_size(idx_path_)) {
-            spdlog::info("index file is empty, remove it.");
+            logger_->info("index file is empty, remove it.");
             std::filesystem::remove(idx_path_);
             std::filesystem::remove(content_path_);
         }
@@ -51,7 +52,7 @@ TxnRecorder::TxnRecorder(std::string dir,Logger logger):processed_txn_id_(0),log
      * 1、若索引文件为0，删除，此时被视为不存在的状态
      * 2、因此索引文件只分为存在(至少包含一条数据)和不存在两种情况
      */
-    if (std::filesystem::exists(idx_path_) && std::filesystem::is_regular_file(idx_path_)) {
+    if (!std::filesystem::exists(idx_path_)) {
         //代表首次启动，截断长度为0
         idx_ = std::shared_ptr<EntryFile>(new EntryFile(idx_path_, 0, sizeof(TxnEntry)));
         content_ = std::shared_ptr<EntryFile>(new EntryFile(content_path_, 0, DspMessage::buffer_size));
@@ -84,9 +85,10 @@ void TxnRecorder::init_index_file() {
     size_t txn_count = file_size / sizeof(TxnEntry);
     size_t valid_size = txn_count * sizeof(TxnEntry);
     if (valid_size != file_size) {
-        spdlog::info("Warning: File size ({}) is not a multiple of TxnEntry size ({}). Possible file corruption. Using only the {} txns.", file_size, sizeof(TxnEntry), txn_count);
+        logger_->info("Warning: File size ({}) is not a multiple of TxnEntry size ({}). Possible file corruption. Using only the {} txns.", file_size, sizeof(TxnEntry), txn_count);
     }
     entries_.resize(txn_count);
+    data_count_prefix_sum_.resize(txn_count);
     // 读取文件到vector中
     std::ifstream file(idx_path_, std::ios::binary);
     if (!file.read(reinterpret_cast<char *>(entries_.data()), txn_count * sizeof(TxnEntry))) {
@@ -94,7 +96,7 @@ void TxnRecorder::init_index_file() {
     }
     //entry至少有一条数据
     processed_txn_id_ = entries_.back().txnId;
-    spdlog::info("last processed txnid is {}", processed_txn_id_);
+    logger_->info("last processed txnid is {}", processed_txn_id_);
     //前缀和，便于查询
     data_count_prefix_sum_[0] = entries_[0].dataCnt;
     for (int i = 1; i < entries_.size(); i++) {

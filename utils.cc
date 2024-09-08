@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <chrono>
 #include <filesystem>
 
 std::shared_ptr<spdlog::logger> create_logger(const std::string &logger_name) {
@@ -16,5 +17,6 @@ std::shared_ptr<spdlog::logger> create_logger(const std::string &logger_name) {
     // 设置 logger 的格式和级别
     logger->set_pattern("[%Y-%m-%d %H:%M:%S.%f] [%l] %v");
     logger->set_level(spdlog::level::info);
+    spdlog::flush_every(std::chrono::milliseconds(100));
     return logger;
 }
