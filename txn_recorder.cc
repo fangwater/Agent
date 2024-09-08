@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
+#include <stdexcept>
 void TxnRecorder::write_dsp_message(std::shared_ptr<DspMessage> msg) {
     msg->write(idx_, content_);
 }
@@ -59,6 +60,9 @@ TxnRecorder::TxnRecorder(std::string dir,Logger logger):processed_txn_id_(0),log
     } else {
         //数据存在且不为0，需要读取数据
         init_index_file();
+        if (!std::filesystem::exists(content_path_)) {
+            throw std::runtime_error("index file existed but content log file is missing!");
+        }
         verify_log_file();
     }
 }
@@ -67,7 +71,7 @@ TxnRecorder::TxnRecorder(std::string dir,Logger logger):processed_txn_id_(0),log
 void TxnRecorder::verify_log_file() {
     //根据索引文件的读取结果，对log文件进行裁剪和校验
     //根据data_count 已直到buffer size 判断
-    auto file_size = std::filesystem::file_size(log_name);
+    auto file_size = std::filesystem::file_size(content_path_);
     auto expected_size = data_count_prefix_sum_.back() * DspMessage::buffer_size;
     if (file_size < expected_size) {
         throw std::runtime_error("log file size is less than expected, Possible file corruption");
