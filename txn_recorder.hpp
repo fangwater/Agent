@@ -28,8 +28,8 @@ private:
     int64_t processed_txn_id_;
     std::shared_ptr<EntryFile> idx_;
     std::shared_ptr<EntryFile> content_;
-    const char *index_name = "txn_index";
-    const char *log_name = "txn_content";
+    const char *index_name = "txn_index.bin";
+    const char *log_name = "txn_content.bin";
     std::string idx_path_;
     std::string content_path_;
     Logger logger_;

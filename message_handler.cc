@@ -10,7 +10,7 @@
 
 
 MessageHandler::MessageHandler(Logger logger, bool flag, std::string dir, int id)
-    : logger_(logger), state_(HandlerState::INIT), inner_flag_(flag), reset_requested_(false), running_(true), txn_recorder_(dir), id_(id){};
+    : logger_(logger), state_(HandlerState::INIT), inner_flag_(flag), reset_requested_(false), running_(true), txn_recorder_(dir,logger), id_(id){};
 
 bool MessageHandler::get_flag() {
     return flag_.load();
