@@ -1,5 +1,6 @@
 #include "txn_recorder.hpp"
 #include "dsp_message.hpp"
+#include "spdlog/spdlog.h"
 #include "utils.hpp"
 #include <cstddef>
 #include <fcntl.h>
@@ -14,7 +15,7 @@ void TxnRecorder::write_dsp_message(std::shared_ptr<DspMessage> msg) {
 
 void TxnRecorder::append_txn_entry(const TxnEntry &entry) {
     entries_.push_back(entry);
-    int64_t pre_count = data_count_prefix_sum_.back();
+    int64_t pre_count = data_count_prefix_sum_.empty() ? 0 : data_count_prefix_sum_.back();
     data_count_prefix_sum_.push_back(pre_count + entry.dataCnt);
     processed_txn_id_++;
 }
@@ -80,7 +81,7 @@ void TxnRecorder::verify_log_file() {
     } else {
         spdlog::info("The log file size exactly matches index file expected .");
     }
-    content_ = std::make_shared<EntryFile>(log_name, expected_size, DspMessage::buffer_size);
+    content_ = std::make_shared<EntryFile>(content_path_, expected_size, DspMessage::buffer_size);
 }
 
 void TxnRecorder::init_index_file() {
@@ -103,9 +104,12 @@ void TxnRecorder::init_index_file() {
     logger_->info("last processed txnid is {}", processed_txn_id_);
     //前缀和，便于查询
     data_count_prefix_sum_[0] = entries_[0].dataCnt;
-    for (int i = 1; i < entries_.size(); i++) {
+    int i = 0;
+    spdlog::info("\ntxn:{}\ndata_count_prefix_sum:{}\nentry_last_data_seq:{}", entries_[i].txnId, data_count_prefix_sum_[i], entries_[i].lstDataSqno);
+    for (i = 1; i < entries_.size(); i++) {
         //前缀和计算的同时校验data_sq是否正确
         data_count_prefix_sum_[i] = data_count_prefix_sum_[i - 1] + entries_[i].dataCnt;
+        spdlog::info("\ntxn:{}\ndata_count_prefix_sum:{}\nentry_last_data_seq:{}", entries_[i].txnId, data_count_prefix_sum_[i], entries_[i].lstDataSqno);
         if (data_count_prefix_sum_[i] != entries_[i].lstDataSqno) {
             throw std::runtime_error("error!");
         }

@@ -3,7 +3,7 @@
 #include "utils.hpp"
 
 MatchEngine::MatchEngine(int id) : id_(id), running_(false) {
-    logger_ = create_logger("match_engine");
+    logger_ = create_logger(fmt::format("match_engine_{}", id));
 }
 
 void MatchEngine::bind_agents(std::vector<std::shared_ptr<Agent>> &agents) {

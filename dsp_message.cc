@@ -1,5 +1,7 @@
 #include "dsp_message.hpp"
+#include "spdlog/spdlog.h"
 #include "txn_entry.hpp"
+#include <cstdint>
 #include <fmt/format.h>
 #include <memory>
 #include <stdexcept>
@@ -16,7 +18,7 @@ void add_repeat_data(message::intrnl::IntrnlMsg &msg, int dataCnt, const TxnEntr
 }
 
 // 创建 IntrnlMsg
-message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_t &txnid, int dataSqno) {
+message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_t &txnid, int64_t& dataSqno) {
     txnid++;
     dataSqno++;
     message::intrnl::IntrnlMsg msg;
@@ -25,7 +27,6 @@ message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_
     int currentSqno = dataSqno;
     TxnEntry entry;
     entry.txnId = txnid;
-    entry.dataCnt = totalDataCnt;
     entry.frstDataSqno = dataSqno;
     entry.lstDataSqno = dataSqno + totalDataCnt - 1;
     while (remainingDataCnt > 0) {
@@ -36,6 +37,7 @@ message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_
         currentSqno += currentDataCnt;
     }
     dataSqno += totalDataCnt - 1;
+    spdlog::info("{}",entry.to_string());
     return msg;
 }
 

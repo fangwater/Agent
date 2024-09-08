@@ -33,5 +33,5 @@ public:
     void write(std::shared_ptr<EntryFile> index_file, std::shared_ptr<EntryFile> log_file);
 };
 
-message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_t &txnid, int dataSqno);
+message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_t &txnid, int64_t& dataSqno);
 #endif
