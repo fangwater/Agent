@@ -59,6 +59,7 @@ void DspMessage::write(std::shared_ptr<EntryFile> index_file, std::shared_ptr<En
 void DspMessage::process(int64_t processed_txn_id) {
     txn_entry_ = *reinterpret_cast<const TxnEntry *>(pbIntrnlReq_.intrnmsgdata().begin()->data().c_str());
     txn_entry_.msgCnt = 0;
+    txn_entry_.dataCnt = 0;
     for (auto iter = pbIntrnlReq_.intrnmsgdata().begin(); iter != pbIntrnlReq_.intrnmsgdata().end(); iter++) {
         char *msg_data_ptr = const_cast<char *>(iter->data().c_str());
         TxnEntry *txn_entry_ptr = reinterpret_cast<TxnEntry *>(msg_data_ptr);
@@ -69,6 +70,7 @@ void DspMessage::process(int64_t processed_txn_id) {
         buffers_.push_back(buffer_ptr);
         data_counts_.push_back(txn_entry_ptr->dataCnt);
         txn_entry_.msgCnt++;
+        txn_entry_.dataCnt += txn_entry_ptr->dataCnt;
     }
 }
 
