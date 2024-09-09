@@ -2,9 +2,11 @@
 #include "dsp_message.hpp"
 #include "txn_recorder.hpp"
 #include "utils.hpp"
+#include <chrono>// 包含chrono库
 #include <cmath>
 #include <fmt/format.h>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <sys/types.h>
 
@@ -16,18 +18,28 @@ bool MessageHandler::get_flag() {
     return flag_.load();
 }
 
+
 void MessageHandler::try_switch(bool target_flag) {
     flag_ = target_flag;
+    spdlog::info("agent[{}] reset flag, waiting......", id_);
     {
         std::unique_lock<std::mutex> lock(mutex_);
         reset_requested_ = true;
-        logger_->info("agent[{}] reset flag, waiting......", id_);
+        // 记录开始时间
+        auto start = std::chrono::steady_clock::now();
+        // 等待条件变量，直到 reset_requested_ 为 false
         reset_cv_.wait(lock, [this] { return reset_requested_ == false; });
-        logger_->info("agent[{}] switch completed!", id_);
+        // 记录结束时间
+        auto end = std::chrono::steady_clock::now();
+        // 计算时间差并转换为秒
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        spdlog::info("agent[{}] switch completed! took {:.1f} seconds", id_, elapsed_seconds.count());
     }
 }
 
+
 void MessageHandler::start_process() {
+    spdlog::info("start agent[{}] message handler!", id_);
     while (running_ || message_queue_.empty()) {
         /*
              * handler分为两种状态，alive和init状态
@@ -79,10 +91,18 @@ void MessageHandler::start_process() {
                 txn_recorder_.append_txn_entry(dsp_msg->txn_entry_);
             }
             /**
-                * @brief 若发现此时，reset的标志被设置，则代表ME发生了备切主
-                * 原因: 初始时，默认和ME一起的是备，即Agent默认flag为true，备切主，设置为false
-                * 收到dsp选主的IMT event后，把flag改为false，此时flag不能立刻生效，而是重置为INIT，flag再生效
-                */
+            * @brief 若发现此时，reset的标志被设置，则代表ME发生了备切主
+            * 原因: 初始时，默认和ME一起的是备，即Agent默认flag为true，备切主，设置为false
+            * 收到dsp选主的IMT event后，把flag改为false，此时flag不能立刻生效，而是重置为INIT，flag再生效
+            */
+            /**
+             * @brief 此处状态切换存在问题
+             * 1、当secondary需要提升为primary的时候，会使用try_switch设置，进入init
+             * 2、INIT由于参考首次启动，默认共存的ME为备，因此直接进入secondary
+             * 3、此时，如果primary之前仍有剩余消息，由于以及进入secondary状态，所以会被写入，因此存在bug
+             * @brief 修改方法
+             * 1、首次从init进入secondary，同样需要卡住
+             */
             if (reset_requested_) {
                 logger_->info("agent[{}] reset requested, switching to [INIT] state...", id_);
                 //flag的变化不会立即生效，而是在状态切换之后

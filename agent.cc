@@ -1,7 +1,10 @@
 #include "agent.hpp"
 #include "dsp_message.hpp"
 #include "message_handler.hpp"
+#include "spdlog/spdlog.h"
 #include "utils.hpp"
+#include <cmath>
+#include <future>
 #include <memory>
 #include <stdexcept>
 #include <sys/types.h>
@@ -23,17 +26,41 @@ std::string Agent::state_str(AgentState s) {
     }
     return "NULL";
 }
+int64_t Agent::get_processed_txnid() {
+    return message_handler_->get_processed_txnid();
+}
+int64_t Agent::get_processed_total_data_count() {
+    return message_handler_->get_processed_total_data_count();
+}
 
 std::string Agent::current_state() {
     return state_str(agent_state_);
 }
 Agent::Agent(std::string host_name, std::string dir, int agent_id)
-    : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT) {
+    : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT), dir_(dir) {
     logger_ = create_logger(fmt::format("agent[{}]", agent_id_));
-    //Agent默认ME为备，flag = true标志位需要写的状态
-    message_handler_ = std::make_unique<MessageHandler>(logger_,true, dir, agent_id);
+}
+void Agent::start_agent(bool flag){
+    handler_future_ = std::async(std::launch::async, [this, flag]() {
+        if(!flag){
+            logger_->info("agent[{}] run as Primary(not write)",agent_id_);
+        } else {
+            logger_->info("agent[{}] run as Secondary(write)", agent_id_);
+        }
+        message_handler_ = std::make_unique<MessageHandler>(logger_,flag,dir_,agent_id_);
+        message_handler_->start_process();
+    });
 }
 
+void Agent::stop_agent() {
+    message_handler_->stop_process();
+    handler_future_.get();
+    logger_->info("agent[{}] exited!" ,agent_id_);
+}
+
+const std::string &Agent::get_host_name() {
+    return host_name_;
+}
 
 /**
  * @brief 仅用于当Agent启动，或者发生主备切换以后，ME(主)向Agent询问，当前的Txn数据是完整状态
@@ -56,7 +83,7 @@ bool Agent::is_txn_ready() {
         logger_->info("reply for txn-ready check: agent has not started state switching yet.");
         return false;
     } else {
-        logger_->error("current agent state is: [{}], should not check txn ready!",state_str(agent_state_));
+        logger_->error("current agent state is: [{}]...", state_str(agent_state_));
         return false;
     }
 }
@@ -95,8 +122,10 @@ void Agent::handle_subscribe_event(const std::string &master) {
             message_handler_->try_switch(false);
             agent_state_ = AgentState::PRIMARY;
             logger_->info("success switch to [{}]!", state_str(agent_state_));
-        } else {
-            logger_->error("error for agent in {} and try switch {}",state_str(agent_state_),state_str(AgentState::PRIMARY));
+        } else if (agent_state_ == AgentState::TO_PRIMARY) {
+            logger_->info("agent already in {} and try switch {}, ignore request of this time", state_str(agent_state_), state_str(AgentState::PRIMARY));
+        }else {
+            spdlog::error("error for agent in {} and try switch {}",state_str(agent_state_),state_str(AgentState::PRIMARY));
             throw std::runtime_error("error state");
         }
     } else {
@@ -105,6 +134,8 @@ void Agent::handle_subscribe_event(const std::string &master) {
             //初始为INIT状态 message_handler默认写，无需切换
             logger_->info("agent state change due to init subscribe:");
             logger_->info("current state: [{}]...", state_str(agent_state_));
+            agent_state_ = AgentState::TO_SECONDARY;
+            message_handler_->try_switch(true);
             agent_state_ = AgentState::SECONDARY;
             logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else if(agent_state_ == AgentState::SECONDARY){
@@ -121,8 +152,10 @@ void Agent::handle_subscribe_event(const std::string &master) {
             message_handler_->try_switch(true);
             agent_state_ = AgentState::SECONDARY;
             logger_->info("success switch to [{}]!", state_str(agent_state_));
-        } else {
-            logger_->error("error for agent in {} and try switch {}", state_str(agent_state_), state_str(AgentState::SECONDARY));
+        } else if (agent_state_ == AgentState::TO_SECONDARY) {
+            logger_->info("agent already in {} and try switch {}, ignore request of this time", state_str(agent_state_), state_str(AgentState::SECONDARY));
+        }else {
+            spdlog::error("error for agent in {} and try switch {}", state_str(agent_state_), state_str(AgentState::SECONDARY));
             throw std::runtime_error("error state");
         }
     }

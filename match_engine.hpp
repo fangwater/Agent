@@ -2,7 +2,6 @@
 #define MATCH_ENGINE_HPP
 #include "agent.hpp"
 #include "dsp_channel.hpp"
-#include "utils.hpp"
 #include <atomic>
 #include <cstdint>
 #include <fmt/format.h>
@@ -17,7 +16,6 @@ public:
     int acked_txnid_;
     std::vector<std::shared_ptr<Agent>> agents_;
     std::atomic_bool running_;
-    Logger logger_;
 
 public:
     MatchEngine(int id);

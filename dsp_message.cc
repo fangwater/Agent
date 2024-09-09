@@ -1,5 +1,4 @@
 #include "dsp_message.hpp"
-#include "spdlog/spdlog.h"
 #include "txn_entry.hpp"
 #include <cstdint>
 #include <fmt/format.h>
@@ -38,7 +37,6 @@ message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_
         currentSqno += currentDataCnt;
     }
     dataSqno += totalDataCnt - 1;
-    spdlog::info("{}",entry.to_string());
     return msg;
 }
 

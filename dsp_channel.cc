@@ -1,16 +1,27 @@
 #include "dsp_channel.hpp"
 #include <mutex>
+#include <stdexcept>
+#include <thread>
 #include <unordered_map>
-void DspChannel::sub(std::shared_ptr<Agent> agent) {
-    std::lock_guard<std::mutex> lk(mu_);
-    auto id = agent->get_id();
-    auto iter = agents_.find(id);
-    if (iter != agents_.end()) {
-        iter->second = agent;
-    } else {
-        agents_[id] = agent;
+bool DspChannel::sub(std::shared_ptr<Agent> agent) {
+    if (!master_setted_) {
+        throw std::runtime_error("can not sub before master setted!");
     }
-    agent->handle_subscribe_event(current_master_);
+    {
+        std::lock_guard<std::mutex> lk(mu_);
+        auto id = agent->get_id();
+        auto iter = agents_.find(id);
+        if (iter != agents_.end()) {
+            iter->second = agent;
+        } else {
+            agents_[id] = agent;
+        }
+    }
+    if (agent->get_host_name() == current_master_) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 bool DspChannel::unsub(int id) {
@@ -54,7 +65,11 @@ void DspChannel::stop_channel() {
 
 void DspChannel::reset_master(std::string master) {
     current_master_ = master;
+    master_setted_ = true;
     for (auto iter = agents_.begin(); iter != agents_.end(); iter++) {
-        iter->second->handle_subscribe_event(current_master_);
+        std::thread handle_tr([iter, this]() {
+            iter->second->handle_subscribe_event(current_master_);
+        });
+        handle_tr.join();
     }
 }

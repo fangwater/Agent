@@ -3,7 +3,9 @@
 
 #include "message_handler.hpp"
 #include <atomic>
+#include <cstdint>
 #include <fmt/format.h>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -43,16 +45,18 @@ public:
     void push(const std::vector<char> &message);
     std::string current_state();
     int get_id() const;
+    void start_agent(bool flag);
+    void stop_agent();
+    int64_t get_processed_txnid();
+    int64_t get_processed_total_data_count();
+    const std::string& get_host_name();
     //moz-kv instance
-    std::unique_ptr<MessageHandler> message_handler_;
 
 private:
-    /**
-     * @brief 记录当前Agent对Txn的数据记录状态
-     * 
-     */
+    std::unique_ptr<MessageHandler> message_handler_;
+    //记录当前Agent对Txn的数据记录状态
     std::atomic<AgentState> agent_state_;
-    /**2
+    /**
      * @brief 分为两种情况
      * 1、当role从备切主时，ME需要读取同步等待，确认已经消费完dsp中全部消息(10s无新消息)，额外的，增加一个id对齐
      * 2、当role从主切备，ME无需获取数据。
@@ -61,7 +65,9 @@ private:
     std::mutex mu_;
     int agent_id_;
     std::string host_name_;
+    std::future<void> handler_future_;
     Logger logger_;
+    std::string dir_;
     
 };
 
