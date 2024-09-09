@@ -93,7 +93,7 @@ void test_base() {
         spdlog::info("===================");
         for (int i = 0; i < agents.size(); i++) {
             size_t file_size = std::filesystem::file_size(fmt::format("../agent{}/txn_index.bin", i));
-            size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_log_content.bin", i));
+            size_t log_size = std::filesystem::file_size(fmt::format("../agent{}/txn_content.bin", i));
             spdlog::info("Agent[{}]|{:16}|{:16}|", agents[i]->get_id(), file_size, log_size);
         }
         spdlog::info("===================");

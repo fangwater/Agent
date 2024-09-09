@@ -31,6 +31,7 @@ message::intrnl::IntrnlMsg create_IntrnlMsg_with_repeat(int totalDataCnt, int64_
     entry.lstDataSqno = dataSqno + totalDataCnt - 1;
     while (remainingDataCnt > 0) {
         int currentDataCnt = std::min(cnt_max, remainingDataCnt);
+        entry.dataCnt = currentDataCnt;
         add_repeat_data(msg, currentDataCnt, entry);
         // 更新 remainingDataCnt 和 currentSqno
         remainingDataCnt -= currentDataCnt;
