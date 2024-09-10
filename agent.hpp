@@ -39,7 +39,7 @@ private:
     static std::string state_str(AgentState s);
 public:
     Agent() = delete;
-    Agent(std::string host_name, std::string dir, int agent_id);
+    Agent(std::string current_master, std::string host_name, std::string dir, int agent_id);
     bool is_txn_ready();
     void handle_subscribe_event(const std::string &master);
     void push(const std::vector<char> &message);

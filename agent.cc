@@ -36,9 +36,15 @@ int64_t Agent::get_processed_total_data_count() {
 std::string Agent::current_state() {
     return state_str(agent_state_);
 }
-Agent::Agent(std::string host_name, std::string dir, int agent_id)
+Agent::Agent(std::string current_master, std::string host_name, std::string dir, int agent_id)
     : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT), dir_(dir) {
+    spdlog::info("create logger for agent[{}]",agent_id_);
     logger_ = create_logger(fmt::format("agent[{}]", agent_id_));
+    if (current_master == host_name_) {
+        message_handler_ = std::make_unique<MessageHandler>(logger_, false, dir_, agent_id_);
+    } else {
+        message_handler_ = std::make_unique<MessageHandler>(logger_, true, dir_, agent_id_);
+    }
 }
 void Agent::start_agent(const std::string& current_master) {
     /**
@@ -51,14 +57,7 @@ void Agent::start_agent(const std::string& current_master) {
      * (1) 每次启动的时，先异步调用切换主备
      * (2) 若为首次启动，10s内不会有消息产生，handle_subscribe_event成功，txn_ready
      * (3) 若为重启，此时消息不会堵塞，而是按照目前的flag进行处理，因此重启需要保证此时的flag正确性，然后切至目标状态，txn_ready
-     * 为什么Agent1无法正确拉起?
-     * 
      */
-    if (current_master == host_name_) {
-        message_handler_ = std::make_unique<MessageHandler>(logger_, false, dir_, agent_id_);
-    } else {
-        message_handler_ = std::make_unique<MessageHandler>(logger_, true, dir_, agent_id_);
-    }
     auto f_init_switch = std::async(std::launch::async, [this, current_master]() {
         if(current_master == host_name_){
             //转主需要收完全部DSP消息

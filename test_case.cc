@@ -12,9 +12,9 @@
 #include <thread>
 #include <vector>
 
-std::shared_ptr<Agent> build_agent(int i) {
+std::shared_ptr<Agent> build_agent(int i, int master) {
     std::string agent_path = fmt::format("../agent{}", i);
-    return std::make_shared<Agent>(fmt::format("host{}", i), agent_path, i);
+    return std::make_shared<Agent>(fmt::format("host{}", master),fmt::format("host{}", i), agent_path, i);
 }
 
 void print_file_status(const std::vector<std::shared_ptr<Agent>>& agents) {
@@ -36,10 +36,10 @@ void print_agent_status(const std::vector<std::shared_ptr<Agent>> &agents) {
 }
 
 
-std::vector<std::shared_ptr<Agent>> build_agents(int num, std::shared_ptr<DspChannel> channel) {
+std::vector<std::shared_ptr<Agent>> build_agents(int master, int num, std::shared_ptr<DspChannel> channel) {
     std::vector<std::shared_ptr<Agent>> agents;
     for (int i = 0; i < num; i++) {
-        auto agt = build_agent(i);
+        auto agt = build_agent(i,master);
         agents.push_back(agt);
     }
     return agents;
@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<Agent>> build_agents(int num, std::shared_ptr<DspCha
 
 void test_base() {
     auto channel = std::make_shared<DspChannel>();
-    auto agents = build_agents(4, channel);
+    auto agents = build_agents(0,4, channel);
     //ME开始请求agent，询问是否当前数据可用
     auto match_eng = std::make_shared<MatchEngine>(0);
     std::thread run_me([match_eng, channel]() {
@@ -97,7 +97,7 @@ void test_base() {
 
 void test_secondary_agent_restart() {
     auto channel = std::make_shared<DspChannel>();
-    auto agents = build_agents(2, channel);
+    auto agents = build_agents(0,2, channel);
     std::thread run_channel([channel]() {
         channel->start_channel();
     });
@@ -137,7 +137,7 @@ void test_secondary_agent_restart() {
 
 void test_primary_agent_restart() {
     auto channel = std::make_shared<DspChannel>();
-    auto agents = build_agents(2, channel);
+    auto agents = build_agents(0, 2, channel);
     std::thread run_channel([channel]() {
         channel->start_channel();
     });
