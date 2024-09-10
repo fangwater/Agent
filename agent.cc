@@ -40,16 +40,38 @@ Agent::Agent(std::string host_name, std::string dir, int agent_id)
     : host_name_(host_name), agent_id_(agent_id), agent_state_(AgentState::INIT), dir_(dir) {
     logger_ = create_logger(fmt::format("agent[{}]", agent_id_));
 }
-void Agent::start_agent(bool flag){
-    handler_future_ = std::async(std::launch::async, [this, flag]() {
-        if(!flag){
-            logger_->info("agent[{}] run as Primary(not write)",agent_id_);
+void Agent::start_agent(const std::string& current_master) {
+    /**
+     * @brief Agent切primary的条件
+     * 1、运行时切换，即从secondary切入primary，此时必须要10s内无消息，才能允许切换
+     * (1) 此时agent处于alive状态，收到switch请求，切换到init
+     * (2) 10s内，如果收到消息，再次切到alive，按照之前的逻辑出路消息
+     * (3) 直到10s收不到消息，进入timeout分支，获取flag并切换，notify
+     * 2、初始时进入primary(也可能是重启)
+     * (1) 每次启动的时，先异步调用切换主备
+     * (2) 若为首次启动，10s内不会有消息产生，handle_subscribe_event成功，txn_ready
+     * (3) 若为重启，此时消息不会堵塞，而是按照目前的flag进行处理，因此重启需要保证此时的flag正确性，然后切至目标状态，txn_ready
+     * 为什么Agent1无法正确拉起?
+     * 
+     */
+    if (current_master == host_name_) {
+        message_handler_ = std::make_unique<MessageHandler>(logger_, false, dir_, agent_id_);
+    } else {
+        message_handler_ = std::make_unique<MessageHandler>(logger_, true, dir_, agent_id_);
+    }
+    auto f_init_switch = std::async(std::launch::async, [this, current_master]() {
+        if(current_master == host_name_){
+            //转主需要收完全部DSP消息
+            handle_subscribe_event(current_master);
         } else {
-            logger_->info("agent[{}] run as Secondary(write)", agent_id_);
+            //转备可以直接切换，只需要确保message_handler的flag是正确的
+            agent_state_ = AgentState::SECONDARY;
         }
-        message_handler_ = std::make_unique<MessageHandler>(logger_,flag,dir_,agent_id_);
+    });
+    handler_future_ = std::async(std::launch::async, [this]() {
         message_handler_->start_process();
     });
+    f_init_switch.get();
 }
 
 void Agent::stop_agent() {

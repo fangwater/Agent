@@ -45,7 +45,7 @@ public:
     void push(const std::vector<char> &message);
     std::string current_state();
     int get_id() const;
-    void start_agent(bool flag);
+    void start_agent(const std::string &current_master);
     void stop_agent();
     int64_t get_processed_txnid();
     int64_t get_processed_total_data_count();

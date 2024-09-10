@@ -56,15 +56,16 @@ void MessageHandler::start_process() {
                 if (reset_requested_) {
                     inner_flag_ = get_flag();
                     if (inner_flag_) {
-                        logger_->info("agent[{}] Set the process flag to true", id_);
+                        logger_->info("agent[{}] set the process flag to true", id_);
                     } else {
-                        logger_->info("agent[{}] Set the process flag to false", id_);
+                        logger_->info("agent[{}] set the process flag to false", id_);
                     }
                     reset_requested_ = false;
                     reset_cv_.notify_one();
                 }
                 break;
-            } else {
+            }
+            else {
                 //因为push message退出，继续保持
                 state_ = HandlerState::ALIVE;
             }
@@ -107,8 +108,6 @@ void MessageHandler::start_process() {
                 logger_->info("agent[{}] reset requested, switching to [INIT] state...", id_);
                 //flag的变化不会立即生效，而是在状态切换之后
                 state_ = HandlerState::INIT;
-                reset_requested_ = false;
-                reset_cv_.notify_one();
             }
         }
     }

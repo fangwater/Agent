@@ -62,7 +62,8 @@ void test_base() {
     channel->reset_master("host0");
     //此时4个agent均为备，模拟dsp
     for (auto &agent: agents) {
-        agent->start_agent(channel->sub(agent));
+        channel->sub(agent);
+        agent->start_agent(channel->current_master_);
     }
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 10; k++) {
@@ -109,7 +110,8 @@ void test_secondary_agent_restart() {
     //假设ME0为主，ME123为备份
     channel->reset_master("host0");
     for (auto &agent: agents) {
-        agent->start_agent(channel->sub(agent));
+        channel->sub(agent);
+        agent->start_agent(channel->current_master_);
     }
     /**
      * @brief 如何模拟agent的重启功能
@@ -120,7 +122,7 @@ void test_secondary_agent_restart() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         agents[1]->stop_agent();
         std::this_thread::sleep_for(std::chrono::seconds(5));
-        agents[1]->start_agent(channel->sub(agents[1]));
+        agents[1]->start_agent(channel->current_master_);
     });
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {
@@ -149,13 +151,14 @@ void test_primary_agent_restart() {
     channel->reset_master("host0");
     //此时4个agent均为备，模拟dsp
     for (auto &agent: agents) {
-        agent->start_agent(channel->sub(agent));
+        channel->sub(agent);
+        agent->start_agent(channel->current_master_);
     }
     std::thread restart_agent([agents, channel]() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         agents[1]->stop_agent();
         std::this_thread::sleep_for(std::chrono::seconds(5));
-        agents[1]->start_agent(channel->sub(agents[1]));
+        agents[1]->start_agent(channel->current_master_);
     });
     //ME 500ms 产生一次消息，持续打印
     for (int k = 0; k < 3; k++) {

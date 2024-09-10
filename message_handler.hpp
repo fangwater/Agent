@@ -25,6 +25,7 @@ public:
     void push_message(std::shared_ptr<DspMessage> dsp_msg);
     int64_t get_processed_txnid() const ;
     int64_t get_processed_total_data_count() const;
+    std::atomic<HandlerState> state_;
 
 public:
     Logger logger_;
@@ -35,7 +36,6 @@ public:
     bool inner_flag_;
     int id_;
     std::atomic_bool running_;
-    HandlerState state_;
     std::condition_variable cv_;
     std::condition_variable reset_cv_;
     std::queue<std::shared_ptr<DspMessage>> message_queue_;
