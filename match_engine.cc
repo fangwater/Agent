@@ -39,6 +39,8 @@ void MatchEngine::run(std::shared_ptr<DspChannel> channel) {
             spdlog::info("msg serialize failed!");
             throw std::runtime_error("msg serialize failed!");
         }
+        //ME push之前，写索引并flush
+        
         channel->push_message(msg_data);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

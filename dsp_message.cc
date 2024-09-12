@@ -52,6 +52,7 @@ void DspMessage::write(std::shared_ptr<EntryFile> index_file, std::shared_ptr<En
      * 先写log content部分，查看是否写入成功, 若写失败按照索引进行恢复
      */
     index_file->write(reinterpret_cast<char *>(&txn_entry_));
+    
     log_file->writev(buffers_, data_counts_);
 }
 

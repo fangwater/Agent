@@ -15,7 +15,10 @@ size_t EntryFile::write(const char *buffer, int count) {
         close(fd);
         throw std::runtime_error("Failed to write to file.");
     }
-
+    if (::fsync(fd) == -1) {
+        close(fd);
+        throw std::runtime_error("Failed to flush data to disk.");
+    }
     close(fd);
     entry_count_ += count;
     return written;
@@ -39,7 +42,10 @@ size_t EntryFile::writev(const std::vector<char *> &buffers, const std::vector<i
         close(fd);
         throw std::runtime_error("Failed to writev to file.");
     }
-
+    if (::fsync(fd) == -1) {
+        close(fd);
+        throw std::runtime_error("Failed to flush data to disk.");
+    }
     close(fd);
     entry_count_ += std::accumulate(counts.begin(),counts.end(),0);
     return written;

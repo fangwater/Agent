@@ -66,7 +66,7 @@ void test_base() {
         agent->start_agent(channel->current_master_);
     }
     //ME 500ms 产生一次消息，持续打印
-    for (int k = 0; k < 10; k++) {
+    for (int k = 0; k < 3; k++) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
         spdlog::info("=======CHEKC PONIT{}========",k);
         print_agent_status(agents);
@@ -76,6 +76,7 @@ void test_base() {
     //1 关闭ME 让ME不再产生消息
     match_eng->stop();
     run_me.join();
+    spdlog::info("match_engine_0 stop!");
     //2 重启ME
     //假设ME1为主，ME34为备份, 0此时已经假设不可用
     match_eng = std::make_shared<MatchEngine>(1);
@@ -84,6 +85,7 @@ void test_base() {
         //重新运行ME，此时ME去跟agent1请求ready，会fail
         match_eng->run(channel);
     });
+    spdlog::info("match_engine_1 start!");
     //订阅事件产生，Agent1切换状态，txn_ready通过
     channel->reset_master("host1");
     for (int k = 0; k < 3; k++) {

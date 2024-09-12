@@ -18,6 +18,7 @@ public:
     int64_t get_processed_txn_id() const;
     int64_t get_processed_total_data_count() const;
     void write_dsp_message(std::shared_ptr<DspMessage> msg);
+    bool check_if_txn_already_written(std::shared_ptr<DspMessage> msg);
 
 private:
     void init_index_file();

@@ -42,11 +42,14 @@ void MessageHandler::start_process() {
     spdlog::info("start agent[{}] message handler!", id_);
     while (running_ || message_queue_.empty()) {
         /*
-             * handler分为两种状态，alive和init状态
-             *  1、启动时，默认处于init状态
-             *  2、连续10s没有收到消息(queue保持为empty超过10s)，并且此时处于init，则可以切换到alive状态
-             *  3、alive状态下，可以被设置reset符号，但不立即切换，同样需要保持10s queue为empty的状态，则从alive切换为init
-            */
+        * handler分为两种状态，alive和init状态
+        *  1、启动时，默认处于init状态
+        *  2、连续10s没有收到消息(queue保持为empty超过10s)，并且此时处于init，则可以切换到alive状态
+        *  3、alive状态下，可以被设置reset符号，但不立即切换，同样需要保持10s queue为empty的状态，则从alive切换为init
+        *  4、切换时候，检查request flag，从flag = true(写)到flag = false(不写)必须在此时进行，其含义为，只有当上一次dsp
+        * 消息全部写完，才能进入不写的状态
+        *  5、若之不写，现在写，不依赖于request flag，而是依赖于agent的自身状态检查
+        */
         while (state_ == HandlerState::INIT) {
             std::unique_lock<std::mutex> lock(mutex_);
             if (cv_.wait_for(lock, std::chrono::seconds(10)) == std::cv_status::timeout) {
@@ -85,9 +88,23 @@ void MessageHandler::start_process() {
                     throw std::runtime_error("try process a no initialized msg!");
                 }
                 dsp_msg->process(txn_recorder_.get_processed_txn_id());
-                if (inner_flag_) {
+                /**
+                 * @brief ACK的逻辑修改
+                 * 原先依赖于flag判断主备关系，flag = true写，flag = false不写
+                 * 现逻辑:
+                 * 1、flag = true时，直接写
+                 * 2、flag = false时，每次对文件进行判断
+                 */
+                if (!inner_flag_) {
+                    if (!txn_recorder_.check_if_txn_already_written(dsp_msg)) {
+                        inner_flag_ = true;
+                    }
+                }
+
+                if(inner_flag_){
                     txn_recorder_.write_dsp_message(dsp_msg);
                 }
+                
                 dsp_msg->ack();
                 txn_recorder_.append_txn_entry(dsp_msg->txn_entry_);
             }

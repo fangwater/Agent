@@ -1,6 +1,7 @@
 #include "txn_recorder.hpp"
 #include "dsp_message.hpp"
 #include "spdlog/spdlog.h"
+#include "txn_entry.hpp"
 #include "utils.hpp"
 #include <cstddef>
 #include <fcntl.h>
@@ -8,6 +9,48 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <stdexcept>
+bool TxnRecorder::check_if_txn_already_written(std::shared_ptr<DspMessage> msg) {
+    /**
+    * @brief 当flag为false时:
+    * (1)读取dsp_msg的txnid 
+    * (2)因为TXN一定连续，读取索引文件的filesize，根据txn_entry的大小，读取最后一条索引的数据
+    * (3)对比最后一条索引数据，和txn_entry的数据，是否完全一致
+    * (4)不一致
+        a.txnid为-1的关系，则认为发生了主降备，inner_flag转为true
+        b.txnid断开，丢消息，抛异常，数据已经错误
+    */
+    //(1)读取dsp_msg的txnid
+    if (!std::filesystem::exists(idx_path_)) {
+        throw std::runtime_error(fmt::format("File does not exist: {}", idx_path_));
+    }
+    //(2)因为TXN一定连续，读取索引文件的filesize，根据txn_entry的大小，读取最后一条索引的数据
+    std::streamsize offset = std::filesystem::file_size(idx_path_);
+    std::ifstream file(idx_path_, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error(fmt::format("Failed to open file: {}", idx_path_));
+    }
+    file.seekg(offset - sizeof(TxnEntry));
+    std::vector<char> buffer(sizeof(TxnEntry));
+    file.read(buffer.data(), sizeof(TxnEntry));
+    // 比较内存内容
+    const TxnEntry* entry = &msg->txn_entry_;
+    if (std::memcmp(buffer.data(), entry, sizeof(TxnEntry)) == 0) {
+        logger_->info("txn_id {} already written, verified.", entry->txnId);
+        return true;// 数据一致，主备关系正常
+    } else {
+        //判定是否刚好是+1关系，如果是，则说明新一条消息来自新的ME，flag从false转到true
+        const TxnEntry* last_write_txn_ptr = reinterpret_cast<const TxnEntry*>(buffer.data());
+        if (entry->txnId == last_write_txn_ptr->txnId + 1) {
+            logger_->info("next txn_id {} not written, master ME re-select!");
+            return false;
+        } else {
+            //不是严格递增，消息存在遗漏
+            logger_->error("last written txn-id {} and msg txn-id {} are not consecutive", last_write_txn_ptr->txnId, entry->txnId);
+            throw std::runtime_error("txnid not consecutive");
+        }
+    }
+}
+
 void TxnRecorder::write_dsp_message(std::shared_ptr<DspMessage> msg) {
     msg->write(idx_, content_);
 }

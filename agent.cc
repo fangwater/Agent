@@ -3,11 +3,13 @@
 #include "message_handler.hpp"
 #include "spdlog/spdlog.h"
 #include "utils.hpp"
+#include <chrono>
 #include <cmath>
 #include <future>
 #include <memory>
 #include <stdexcept>
 #include <sys/types.h>
+#include <thread>
 
 std::string Agent::state_str(AgentState s) {
     switch (s) {
@@ -165,12 +167,15 @@ void Agent::handle_subscribe_event(const std::string &master) {
         } else if (agent_state_ == AgentState::PRIMARY) {
             /**
              * @brief Agent原先为primary，ME重选被降为备或挂掉，需要降级为备份
-             * (或者弃用？禁止重启)
+             * 无需立即转换flag，flag从false到true依赖与Agent自身发现完成
              */
             logger_->info("agent state change due to master match_engine re-select!");
             logger_->info("current state: [{}]...", state_str(agent_state_));
             agent_state_ = AgentState::TO_SECONDARY;
-            message_handler_->try_switch(true);
+            while (!message_handler_->inner_flag_) {
+                //等待inner_flag自动变为true(写)
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
             agent_state_ = AgentState::SECONDARY;
             logger_->info("success switch to [{}]!", state_str(agent_state_));
         } else if (agent_state_ == AgentState::TO_SECONDARY) {

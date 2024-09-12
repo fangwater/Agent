@@ -33,7 +33,7 @@ public:
     std::atomic_bool reset_requested_;
     std::mutex mutex_;
     std::atomic_bool flag_;
-    bool inner_flag_;
+    std::atomic_bool inner_flag_;
     int id_;
     std::atomic_bool running_;
     std::condition_variable cv_;
